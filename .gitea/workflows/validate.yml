@@ -1,0 +1,43 @@
+name: validate
+on: [push, pull_request]
+
+jobs:
+  compose-validate:
+    runs-on: ubuntu-26.04-infra
+    container:
+      image: docker.gitea.com/runner-images:ubuntu-26.04
+      volumes:
+        - know-ci-validate:/ci-config
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+
+      - name: Validate Tempo config
+        run: |
+          cp tempo.yaml /ci-config/tempo.yaml
+          docker run --rm \
+            -e TEMPO_BLOCK_RETENTION=168h \
+            -v know-ci-validate:/ci-config:ro \
+            grafana/tempo:3.1.1 \
+            -config.file=/ci-config/tempo.yaml \
+            -config.verify \
+            -config.expand-env=true \
+            -config.verify-errors-only=true
+
+      - name: Validate Prometheus config
+        run: |
+          cp prometheus.yaml /ci-config/prometheus.yaml
+          docker run --rm -v know-ci-validate:/ci-config:ro \
+            --entrypoint promtool prom/prometheus:v3.15.1 \
+            check config /ci-config/prometheus.yaml
+
+      - name: Validate Loki config
+        run: |
+          cp loki-config.yaml /ci-config/loki-config.yaml
+          docker run --rm \
+            -v know-ci-validate:/ci-config:ro \
+            grafana/loki:3.7.9 \
+            -config.file=/ci-config/loki-config.yaml \
+            -config.expand-env=true \
+            -verify-config

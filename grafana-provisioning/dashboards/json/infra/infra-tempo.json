@@ -1,0 +1,248 @@
+{
+	"uid": "infra-tempo",
+	"title": "Infra: Tempo",
+	"tags": [
+		"infra",
+		"tempo"
+	],
+	"timezone": "browser",
+	"schemaVersion": 39,
+	"version": 1,
+	"editable": true,
+	"time": {
+		"from": "now-1h",
+		"to": "now"
+	},
+	"links": [
+		{
+			"title": "Overview",
+			"url": "/d/infra-overview",
+			"type": "link",
+			"icon": "dashboard"
+		}
+	],
+	"panels": [
+		{
+			"id": 1,
+			"type": "stat",
+			"title": "UP",
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "up{job=\"tempo\"}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"min": 0,
+					"max": 1,
+					"mappings": [
+						{
+							"type": "value",
+							"options": {
+								"0": {
+									"text": "DOWN",
+									"color": "red"
+								},
+								"1": {
+									"text": "UP",
+									"color": "green"
+								}
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": 2,
+			"type": "timeseries",
+			"title": "CPU (cores)",
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 4,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "rate(process_cpu_seconds_total{job=\"tempo\"}[5m])"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"fillOpacity": 15,
+						"spanNulls": true
+					}
+				}
+			}
+		},
+		{
+			"id": 3,
+			"type": "timeseries",
+			"title": "Memory (RSS)",
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 8,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "process_resident_memory_bytes{job=\"tempo\"}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "bytes",
+					"custom": {
+						"fillOpacity": 15,
+						"spanNulls": true
+					}
+				}
+			}
+		},
+		{
+			"id": 4,
+			"type": "timeseries",
+			"title": "Goroutines",
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 12,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "go_goroutines{job=\"tempo\"}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"fillOpacity": 15,
+						"spanNulls": true
+					}
+				}
+			}
+		},
+		{
+			"id": 5,
+			"type": "timeseries",
+			"title": "Open FDs",
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 16,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "process_open_fds{job=\"tempo\"}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"fillOpacity": 15,
+						"spanNulls": true
+					}
+				}
+			}
+		},
+		{
+			"id": 6,
+			"type": "timeseries",
+			"title": "Scrape duration",
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 20,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "scrape_duration_seconds{job=\"tempo\"}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s",
+					"custom": {
+						"fillOpacity": 15,
+						"spanNulls": true
+					}
+				}
+			}
+		},
+		{
+			"id": 7,
+			"type": "logs",
+			"title": "Tempo logs",
+			"gridPos": {
+				"h": 18,
+				"w": 24,
+				"x": 0,
+				"y": 8
+			},
+			"datasource": {
+				"type": "loki",
+				"uid": "loki"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "{compose_service=\"tempo\"}"
+				}
+			],
+			"options": {
+				"showTime": true,
+				"showLabels": true,
+				"showCommonLabels": false,
+				"wrapLogMessage": true,
+				"prettifyLogMessage": false,
+				"enableLogDetails": true,
+				"sortOrder": "Descending"
+			}
+		}
+	]
+}

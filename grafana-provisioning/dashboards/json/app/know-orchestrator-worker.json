@@ -1,0 +1,289 @@
+{
+	"uid": "know-orchestrator-worker",
+	"title": "Know Orchestrator & Worker",
+	"description": "Queue, worker activity, task rates, HTTP for Know orchestrator/worker",
+	"tags": [
+		"know",
+		"orchestrator",
+		"worker",
+		"metrics"
+	],
+	"timezone": "browser",
+	"schemaVersion": 39,
+	"version": 1,
+	"editable": true,
+	"graphTooltip": 1,
+	"time": {
+		"from": "now-1h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"templating": {
+		"list": []
+	},
+	"panels": [
+		{
+			"id": 1,
+			"type": "timeseries",
+			"title": "Queue Depth",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (kind) (orchestrator_queue_depth)",
+					"legendFormat": "{{kind}}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"fillOpacity": 15,
+						"spanNulls": true
+					}
+				}
+			}
+		},
+		{
+			"id": 2,
+			"type": "timeseries",
+			"title": "Worker Active Tasks",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (kind) (worker_active_tasks)",
+					"legendFormat": "{{kind}}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"fillOpacity": 15,
+						"spanNulls": true
+					}
+				}
+			}
+		},
+		{
+			"id": 3,
+			"type": "timeseries",
+			"title": "Tasks Finished (rate)",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 8
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (kind, status) (rate(worker_tasks_finished_total[5m]))",
+					"legendFormat": "{{kind}} / {{status}}"
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "timeseries",
+			"title": "Tasks Started (rate)",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 8
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (kind, action) (rate(worker_tasks_started_total[5m]))",
+					"legendFormat": "{{kind}} / {{action}}"
+				}
+			]
+		},
+		{
+			"id": 5,
+			"type": "timeseries",
+			"title": "HTTP Request Rate (Orchestrator)",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 16
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (http_route) (rate(http_server_request_duration_seconds_count[5m]))",
+					"legendFormat": "{{http_route}}"
+				}
+			]
+		},
+		{
+			"id": 6,
+			"type": "timeseries",
+			"title": "HTTP p95 Latency",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 16
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "histogram_quantile(0.95, sum by (le, http_route) (rate(http_server_request_duration_seconds_bucket[5m])))",
+					"legendFormat": "{{http_route}}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s"
+				}
+			}
+		},
+		{
+			"id": 7,
+			"type": "timeseries",
+			"title": "Task error ratio",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 24
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum(rate(worker_tasks_finished_total{status=~\"error|killed|interrupted\"}[5m])) / clamp_min(sum(rate(worker_tasks_finished_total[5m])), 1e-9)",
+					"legendFormat": "error ratio"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percentunit",
+					"min": 0,
+					"max": 1,
+					"custom": {
+						"fillOpacity": 15
+					}
+				}
+			}
+		},
+		{
+			"id": 8,
+			"type": "timeseries",
+			"title": "Reindex progress & coverage",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 24
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "reindex_progress_ratio",
+					"legendFormat": "progress"
+				},
+				{
+					"refId": "B",
+					"expr": "reindex_current_coverage",
+					"legendFormat": "coverage"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percentunit",
+					"min": 0,
+					"max": 1
+				}
+			}
+		},
+		{
+			"id": 9,
+			"type": "timeseries",
+			"title": "Reindex duration p95",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 32
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "histogram_quantile(0.95, sum by (le) (rate(reindex_duration_seconds_bucket[5m])))",
+					"legendFormat": "p95"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s"
+				}
+			}
+		},
+		{
+			"id": 10,
+			"type": "text",
+			"title": "Runbook queries",
+			"gridPos": {
+				"h": 10,
+				"w": 12,
+				"x": 12,
+				"y": 32
+			},
+			"options": {
+				"mode": "markdown",
+				"content": "## Prometheus\n```\nsum by (kind) (orchestrator_queue_depth)\nsum by (kind, status) (rate(worker_tasks_finished_total[5m]))\nsum(rate(worker_tasks_finished_total{status=~\"error|killed|interrupted\"}[5m])) / clamp_min(sum(rate(worker_tasks_finished_total[5m])), 1e-9)\nreindex_progress_ratio\nreindex_current_coverage\n```\n\n## Loki\n```\n{service_name=\"worker\"} | json | event=\"task_finished\" | status!=\"done\"\n{service_name=\"reindex\"} | json | level=~\"(?i)error\"\n{service_name=~\".+\"} | json | task_id=\"PASTE\"\n```\n\n## Tempo\nSearch tags: `service.name=worker`, `task.id=...`, `task.final_status=error`"
+			}
+		}
+	]
+}

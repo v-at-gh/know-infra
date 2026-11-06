@@ -1,0 +1,56 @@
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "docker_logs" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_logs.output
+  forward_to = [loki.process.drop_noise.receiver]
+  relabel_rules = discovery.relabel.docker_logs.rules
+}
+
+loki.process "drop_noise" {
+  forward_to = [loki.write.local.receiver]
+
+  stage.match {
+    selector = "{compose_service=\"tempo\"}"
+    stage.drop {
+      expression           = "no jobs found"
+      drop_counter_reason  = "tempo_idle_scheduler_noise"
+    }
+  }
+
+  stage.match {
+    selector = "{compose_service=\"otel-collector\"}"
+    stage.drop {
+      expression           = ".*"
+      drop_counter_reason  = "collector_debug_feedback_loop"
+    }
+  }
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

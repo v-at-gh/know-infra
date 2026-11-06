@@ -1,0 +1,178 @@
+{
+	"uid": "infra-overview",
+	"title": "Infra: Overview",
+	"tags": [
+		"infra",
+		"know"
+	],
+	"timezone": "browser",
+	"schemaVersion": 39,
+	"version": 1,
+	"editable": true,
+	"time": {
+		"from": "now-1h",
+		"to": "now"
+	},
+	"panels": [
+		{
+			"id": 1,
+			"type": "timeseries",
+			"title": "Target UP",
+			"gridPos": {
+				"h": 7,
+				"w": 24,
+				"x": 0,
+				"y": 0
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "up{job=~\"prometheus|loki|tempo|grafana|otel-collector|alloy|otel-collector\"}",
+					"legendFormat": "{{job}} {{instance}}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"min": 0,
+					"max": 1,
+					"custom": {
+						"fillOpacity": 20
+					}
+				}
+			}
+		},
+		{
+			"id": 2,
+			"type": "timeseries",
+			"title": "OTEL spans accepted / exported",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 7
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum(rate(otelcol_receiver_accepted_spans[5m]))",
+					"legendFormat": "accepted"
+				},
+				{
+					"refId": "B",
+					"expr": "sum(rate(otelcol_exporter_sent_spans[5m]))",
+					"legendFormat": "exported"
+				},
+				{
+					"refId": "C",
+					"expr": "sum(rate(otelcol_exporter_send_failed_spans[5m]))",
+					"legendFormat": "export_failed"
+				}
+			]
+		},
+		{
+			"id": 3,
+			"type": "timeseries",
+			"title": "App queue vs worker active",
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 7
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prom"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (kind) (orchestrator_queue_depth)",
+					"legendFormat": "queue {{kind}}"
+				},
+				{
+					"refId": "B",
+					"expr": "sum by (kind) (worker_active_tasks)",
+					"legendFormat": "worker {{kind}}"
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "logs",
+			"title": "Infra container logs (Alloy)",
+			"gridPos": {
+				"h": 12,
+				"w": 24,
+				"x": 0,
+				"y": 15
+			},
+			"datasource": {
+				"type": "loki",
+				"uid": "loki"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "{compose_service=~\"loki|tempo|prometheus|grafana|otel-collector|alloy\"}"
+				}
+			],
+			"options": {
+				"showTime": true,
+				"showLabels": true,
+				"wrapLogMessage": true,
+				"enableLogDetails": true,
+				"sortOrder": "Descending"
+			}
+		},
+		{
+			"id": 5,
+			"type": "logs",
+			"title": "Infra errors",
+			"gridPos": {
+				"h": 10,
+				"w": 24,
+				"x": 0,
+				"y": 27
+			},
+			"datasource": {
+				"type": "loki",
+				"uid": "loki"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "{compose_service=~\"loki|tempo|prometheus|grafana|otel-collector|alloy\"} |~ \"(?i)error|failed|panic|fatal\""
+				}
+			],
+			"options": {
+				"showTime": true,
+				"wrapLogMessage": true,
+				"enableLogDetails": true,
+				"sortOrder": "Descending"
+			}
+		},
+		{
+			"id": 6,
+			"type": "text",
+			"title": "Verification queries",
+			"gridPos": {
+				"h": 10,
+				"w": 24,
+				"x": 0,
+				"y": 37
+			},
+			"options": {
+				"mode": "markdown",
+				"content": "## Prometheus\n```\nup{job=~\"prometheus|loki|tempo|grafana|otel-collector|alloy\"}\nrate(otelcol_receiver_accepted_spans[5m])\nsum by (kind) (orchestrator_queue_depth)\n```\n\n## Loki app\n```\n{service_name=~\"orchestrator|worker|reindex\"} | json\n```\n\n## Loki infra\n```\n{compose_service=~\"loki|tempo|prometheus|grafana|otel-collector|alloy\"}\n```\n\n## Labels check\n```\nlabel_values(service_name)\nlabel_values(compose_service)\n```"
+			}
+		}
+	]
+}

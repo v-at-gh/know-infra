@@ -1,0 +1,31 @@
+# Runtime data volumes (bind mounts from docker-compose)
+data/
+
+# Secrets & environment overrides
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.db
+*.tmp
+*.bak
+*.ipynb
+.ipynb_checkpoints
+/tests/
+public/
+reports/
+scripts/
+__pycache__/
+.pytest_cache/

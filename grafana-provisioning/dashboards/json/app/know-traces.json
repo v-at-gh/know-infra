@@ -1,0 +1,296 @@
+{
+	"uid": "know-traces",
+	"title": "Know Traces",
+	"description": "Tempo search / TraceQL for Know services",
+	"tags": [
+		"know",
+		"traces",
+		"tempo"
+	],
+	"timezone": "browser",
+	"schemaVersion": 39,
+	"version": 1,
+	"editable": true,
+	"graphTooltip": 1,
+	"time": {
+		"from": "now-1h",
+		"to": "now"
+	},
+	"templating": {
+		"list": [
+			{
+				"name": "service",
+				"type": "custom",
+				"label": "Service",
+				"query": "admin,orchestrator,worker,subprocess",
+				"includeAll": true,
+				"multi": true,
+				"allValue": ".*",
+				"current": {
+					"text": "All",
+					"value": "$__all"
+				}
+			},
+			{
+				"name": "task_kind",
+				"type": "custom",
+				"label": "Task kind",
+				"query": "generation,reindex",
+				"includeAll": true,
+				"multi": true,
+				"allValue": ".*",
+				"current": {
+					"text": "All",
+					"value": "$__all"
+				}
+			},
+			{
+				"name": "min_duration",
+				"type": "custom",
+				"label": "Min duration",
+				"query": "0ms,100ms,500ms,1s,5s",
+				"current": {
+					"text": "0ms",
+					"value": "0ms"
+				}
+			},
+			{
+				"name": "task_id",
+				"type": "textbox",
+				"label": "Task ID",
+				"current": {
+					"text": "",
+					"value": ""
+				}
+			},
+			{
+				"name": "trace_id",
+				"type": "textbox",
+				"label": "Trace ID",
+				"current": {
+					"text": "",
+					"value": ""
+				}
+			}
+		]
+	},
+	"panels": [
+		{
+			"id": 1,
+			"type": "text",
+			"title": "How to use",
+			"gridPos": {
+				"h": 5,
+				"w": 24,
+				"x": 0,
+				"y": 0
+			},
+			"options": {
+				"mode": "markdown",
+				"content": "1. Select **Service** / **Task kind** / **Min duration**.\n2. Open a row in search panels → click **traceID** → full Trace View.\n3. From Trace View use **Logs** / **Metrics** (datasource already has tracesToLogs / tracesToMetrics).\n4. Paste **Task ID** or **Trace ID** into variables for focused panels.\n\nTraceQL cheatsheet:\n```\n{ resource.service.name =~ \"$service\" }\n{ resource.service.name =~ \"$service\" && status = error }\n{ span.task.id = \"$task_id\" }\n{ span.http.route = \"/api/v1/tasks\" }\n{ resource.service.name = \"worker\" && duration > 1s }\n```"
+			}
+		},
+		{
+			"id": 2,
+			"type": "tempo-search",
+			"title": "Recent traces (by service)",
+			"gridPos": {
+				"h": 12,
+				"w": 24,
+				"x": 0,
+				"y": 5
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceqlSearch",
+					"filters": [
+						{
+							"id": "service-name",
+							"tag": "resource.service.name",
+							"operator": "=~",
+							"value": [
+								"${service:regex}"
+							],
+							"scope": "resource"
+						}
+					],
+					"limit": 20
+				}
+			]
+		},
+		{
+			"id": 3,
+			"type": "traces",
+			"title": "TraceQL: service + min duration",
+			"gridPos": {
+				"h": 10,
+				"w": 24,
+				"x": 0,
+				"y": 17
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceql",
+					"query": "{ resource.service.name =~ \"${service:regex}\" && duration > 1s }"
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "traces",
+			"title": "Error traces",
+			"gridPos": {
+				"h": 10,
+				"w": 12,
+				"x": 0,
+				"y": 27
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceql",
+					"query": "{ resource.service.name =~ \"$service\" && status = error }"
+				}
+			]
+		},
+		{
+			"id": 5,
+			"type": "traces",
+			"title": "Worker task.process",
+			"gridPos": {
+				"h": 10,
+				"w": 12,
+				"x": 12,
+				"y": 27
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceql",
+					"query": "{ resource.service.name = \"worker\" && name = \"task.process\" }"
+				}
+			]
+		},
+		{
+			"id": 6,
+			"type": "traces",
+			"title": "By task.id (fill variable)",
+			"gridPos": {
+				"h": 10,
+				"w": 12,
+				"x": 0,
+				"y": 37
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceql",
+					"query": "{ span.task.id = \"$task_id\" }"
+				}
+			]
+		},
+		{
+			"id": 7,
+			"type": "traces",
+			"title": "By trace id (fill variable)",
+			"gridPos": {
+				"h": 10,
+				"w": 12,
+				"x": 12,
+				"y": 37
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceql",
+					"query":"{ trace:id = \"$trace_id\" }"
+				}
+			]
+		},
+		{
+			"id": 8,
+			"type": "traces",
+			"title": "HTTP 5xx (orchestrator/admin)",
+			"gridPos": {
+				"h": 10,
+				"w": 12,
+				"x": 0,
+				"y": 47
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceql",
+					"query": "{ resource.service.name =~ \"orchestrator|admin\" && span.http.status_code >= 500 }"
+				}
+			]
+		},
+		{
+			"id": 9,
+			"type": "traces",
+			"title": "LLM spans",
+			"gridPos": {
+				"h": 10,
+				"w": 12,
+				"x": 12,
+				"y": 47
+			},
+			"datasource": {
+				"type": "tempo",
+				"uid": "tempo"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "traceql",
+					"query": "{ resource.service.name =~ \"$service\" && name =~ \"llm\\\\..*\" }"
+				}
+			]
+		},
+		{
+			"id": 10,
+			"type": "text",
+			"title": "Shell equivalents",
+			"gridPos": {
+				"h": 10,
+				"w": 24,
+				"x": 0,
+				"y": 57
+			},
+			"options": {
+				"mode": "markdown",
+				"content": "```bash\n# tags / services\ncurl -sS http://localhost:3200/api/search/tags | jq\ncurl -sS -G http://localhost:3200/api/search/tag/service.name/values | jq\n\n# search\ncurl -sS -G http://localhost:3200/api/search \\\n  --data-urlencode 'tags=service.name=worker' --data-urlencode 'limit=10' | jq\n\n# one trace\ncurl -sS http://localhost:3200/api/traces/TRACE_ID | jq '.batches[0].resource.attributes'\n```\n\nUseful span attrs you already emit: `task.id`, `task.kind`, `task.action`, `task.final_status`, `http.route`, `http.status_code`, `llm.model`, `llm.latency_ms`, `subprocess.task_id`."
+			}
+		}
+	]
+}

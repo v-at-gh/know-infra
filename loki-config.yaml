@@ -1,0 +1,45 @@
+auth_enabled: ${LOKI_AUTH_ENABLED:-false}
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-04-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+ingester:
+  chunk_idle_period: 1m
+  chunk_target_size: 1048576
+  max_chunk_age: 5m
+  chunk_encoding: snappy
+  chunk_retain_period: 0s
+
+limits_config:
+  allow_structured_metadata: true
+  split_queries_by_interval: 15m
+  max_query_length: 721h
+  max_query_parallelism: 32
+  retention_period: ${LOKI_RETENTION_PERIOD:-720h}
+  ingestion_burst_size_mb: 10
+  ingestion_rate_mb: 10
+
+compactor:
+  working_directory: /loki/compactor
